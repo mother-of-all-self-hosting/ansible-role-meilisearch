@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Perform Typesense installation tasks
+  when: typesense_enabled | bool
+  tags:
+    - setup-all
+    - setup-typesense
+    - install-all
+    - install-typesense
+  block:
+    - name: Validate Typesense configuration
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
+    - name: Install Typesense
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+
+- name: Perform Typesense uninstallation tasks
+  when: not typesense_enabled | bool
+  tags:
+    - setup-all
+    - setup-typesense
+  block:
+    - name: Uninstall Typesense
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
