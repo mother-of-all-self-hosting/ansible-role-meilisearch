@@ -16,8 +16,8 @@ meilisearch_identifier: meilisearch
 meilisearch_base_path: "/{{ meilisearch_identifier }}"
 meilisearch_data_path: "{{ meilisearch_base_path }}/data"
 
-# renovate: datasource=docker depName=meilisearch/meilisearch
-meilisearch_version: 29.0
+# renovate: datasource=docker depName=getmeili/meilisearch
+meilisearch_version: v1.22.3
 
 meilisearch_uid: ""
 meilisearch_gid: ""
@@ -34,7 +34,7 @@ meilisearch_hostname: ""
 # technical limitations.
 meilisearch_path_prefix: /
 
-meilisearch_container_image: "{{ meilisearch_container_image_registry_prefix }}meilisearch/meilisearch:{{ meilisearch_container_image_tag }}"
+meilisearch_container_image: "{{ meilisearch_container_image_registry_prefix }}getmeili/meilisearch:{{ meilisearch_container_image_tag }}"
 meilisearch_container_image_tag: "{{ meilisearch_version }}"
 meilisearch_container_image_registry_prefix: "{{ meilisearch_container_image_registry_prefix_upstream }}"
 meilisearch_container_image_registry_prefix_upstream: "{{ meilisearch_container_image_registry_prefix_upstream_default }}"
