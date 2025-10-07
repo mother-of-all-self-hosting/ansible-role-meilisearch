@@ -51,7 +51,7 @@ meilisearch_container_http_host_bind_port: ""
 meilisearch_container_network: "{{ meilisearch_identifier }}"
 
 # The port number in the container
-meilisearch_container_http_port: 8108
+meilisearch_container_http_port: 7700
 
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
