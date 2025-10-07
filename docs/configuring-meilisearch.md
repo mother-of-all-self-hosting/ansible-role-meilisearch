@@ -20,11 +20,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Setting up Meilisearch
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Meilisearch](https://meilisearch.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Meilisearch](https://www.meilisearch.com) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
 Meilisearch is a fast and typo-tolerant fulltext search engine.
 
-See the project's [documentation](https://meilisearch.org/docs/) to learn what Meilisearch does and why it might be useful to you.
+See the project's [documentation](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) to learn what Meilisearch does and why it might be useful to you.
 
 ## Adjusting the playbook configuration
 
@@ -80,7 +80,7 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `meilisearch_environment_variables_additional_variables` variable
 
-See [the official documentation](https://meilisearch.org/docs/) for a complete list of Meilisearch's config options that you could put in `meilisearch_environment_variables_additional_variables`.
+See [the official documentation](https://www.meilisearch.com/docs/learn/self_hosted/configure_meilisearch_at_launch) for a complete list of Meilisearch's config options that you could put in `meilisearch_environment_variables_additional_variables`.
 
 ## Installing
 
@@ -96,7 +96,7 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, Meilisearch becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
 
-See [this page](https://meilisearch.org/docs/guide/) on the documentation about its usage.
+See [this page](https://www.meilisearch.com/docs/learn/getting_started/what_is_meilisearch) on the documentation about its usage.
 
 ## Troubleshooting
 
