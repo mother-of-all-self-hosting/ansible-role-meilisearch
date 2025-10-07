@@ -16,7 +16,19 @@
     - meilisearch_gid
     - meilisearch_path_prefix
     - meilisearch_container_network
-    - meilisearch_environment_variables_api_key
+    - meilisearch_environment_variables_master_key
+
+- name: Fail if Meilisearch environment is invalid
+  ansible.builtin.fail:
+    msg: >-
+      meilisearch_environment_variables_env must be 'development' or 'production'
+  when: "meilisearch_environment_variables_env not in ['development', 'production']"
+
+- name: Fail if Meilisearch log level is invalid
+  ansible.builtin.fail:
+    msg: >-
+      meilisearch_environment_variables_log_level must be 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE', or 'OFF'
+  when: "meilisearch_environment_variables_log_level not in ['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE', 'OFF']"
 
 - name: Run if Traefik is enabled
   when: meilisearch_container_labels_traefik_enabled | bool

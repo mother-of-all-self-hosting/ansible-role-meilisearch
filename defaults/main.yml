@@ -175,8 +175,20 @@ meilisearch_systemd_wanted_services_list_default: []
 meilisearch_systemd_wanted_services_list_auto: []
 meilisearch_systemd_wanted_services_list_custom: []
 
-# Specify a bootstrap admin API key generated with `pwgen -s 64 1` or in another way
-meilisearch_environment_variables_api_key: ""
+# Specify the instance’s environment
+# See: https://www.meilisearch.com/docs/learn/self_hosted/configure_meilisearch_at_launch#environment
+# Valid values: production, development
+meilisearch_environment_variables_env: production
+
+# Specify the instance’s master key generated with `pwgen -s 64 1` or in another way
+meilisearch_environment_variables_master_key: ""
+
+# Control if MEILI_NO_ANALYTICS is set
+meilisearch_environment_variables_no_analytics: true
+
+# Specify the log level
+# Valid values: ERROR, WARN, INFO, DEBUG, TRACE, OFF
+meilisearch_environment_variables_log_level: WARN
 
 # Additional environment variables.
 meilisearch_environment_variables_additional_variables: ""

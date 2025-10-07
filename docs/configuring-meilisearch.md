@@ -48,12 +48,14 @@ meilisearch_enabled: true
 ########################################################################
 ```
 
-### Set admin API key
+### Set the master key
 
-You also need to specify a bootstrap admin API key. To do so, add the following configuration to your `vars.yml` file. The value can be generated with `pwgen -s 64 1` or in another way.
+You also need to specify the instance's master key, a UTF-8 string of at least 16 bytes.
+
+To do so, add the following configuration to your `vars.yml` file. The value can be generated with `pwgen -s 64 1` or in another way.
 
 ```yaml
-meilisearch_environment_variables_api_key: YOUR_SECRET_KEY_HERE
+meilisearch_environment_variables_master_key: YOUR_SECRET_KEY_HERE
 ```
 
 ### Exposing the instance (optional)
