@@ -5,55 +5,55 @@ SPDX-FileCopyrightText: 2025 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
-{% if typesense_container_labels_traefik_enabled %}
+{% if meilisearch_container_labels_traefik_enabled %}
 traefik.enable=true
 
-{% if typesense_container_labels_traefik_docker_network %}
-traefik.docker.network={{ typesense_container_labels_traefik_docker_network }}
+{% if meilisearch_container_labels_traefik_docker_network %}
+traefik.docker.network={{ meilisearch_container_labels_traefik_docker_network }}
 {% endif %}
 
 {% set middlewares = [] %}
 
-{% if typesense_container_labels_traefik_path_prefix != '/' %}
-traefik.http.middlewares.{{ typesense_identifier }}-slashless-redirect.redirectregex.regex=^({{ typesense_container_labels_traefik_path_prefix | quote }})$
-traefik.http.middlewares.{{ typesense_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
-{% set middlewares = middlewares + [typesense_identifier + '-slashless-redirect'] %}
+{% if meilisearch_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ meilisearch_identifier }}-slashless-redirect.redirectregex.regex=^({{ meilisearch_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ meilisearch_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [meilisearch_identifier + '-slashless-redirect'] %}
 {% endif %}
 
-{% if typesense_container_labels_traefik_path_prefix != '/' %}
-traefik.http.middlewares.{{ typesense_identifier }}-strip-prefix.stripprefix.prefixes={{ typesense_container_labels_traefik_path_prefix }}
-{% set middlewares = middlewares + [typesense_identifier + '-strip-prefix'] %}
+{% if meilisearch_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ meilisearch_identifier }}-strip-prefix.stripprefix.prefixes={{ meilisearch_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [meilisearch_identifier + '-strip-prefix'] %}
 {% endif %}
 
-{% if typesense_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
-{% for name, value in typesense_container_labels_traefik_additional_request_headers.items() %}
-traefik.http.middlewares.{{ typesense_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% if meilisearch_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in meilisearch_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ meilisearch_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
 {% endfor %}
-{% set middlewares = middlewares + [typesense_identifier + '-add-request-headers'] %}
+{% set middlewares = middlewares + [meilisearch_identifier + '-add-request-headers'] %}
 {% endif %}
 
-{% if typesense_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
-{% for name, value in typesense_container_labels_traefik_additional_response_headers.items() %}
-traefik.http.middlewares.{{ typesense_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% if meilisearch_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in meilisearch_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ meilisearch_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
 {% endfor %}
-{% set middlewares = middlewares + [typesense_identifier + '-add-response-headers'] %}
+{% set middlewares = middlewares + [meilisearch_identifier + '-add-response-headers'] %}
 {% endif %}
 
-traefik.http.routers.{{ typesense_identifier }}.rule={{ typesense_container_labels_traefik_rule }}
-{% if typesense_container_labels_traefik_priority | int > 0 %}
-traefik.http.routers.{{ typesense_identifier }}.priority={{ typesense_container_labels_traefik_priority }}
+traefik.http.routers.{{ meilisearch_identifier }}.rule={{ meilisearch_container_labels_traefik_rule }}
+{% if meilisearch_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ meilisearch_identifier }}.priority={{ meilisearch_container_labels_traefik_priority }}
 {% endif %}
-traefik.http.routers.{{ typesense_identifier }}.service={{ typesense_identifier }}
+traefik.http.routers.{{ meilisearch_identifier }}.service={{ meilisearch_identifier }}
 {% if middlewares | length > 0 %}
-traefik.http.routers.{{ typesense_identifier }}.middlewares={{ middlewares | join(',') }}
+traefik.http.routers.{{ meilisearch_identifier }}.middlewares={{ middlewares | join(',') }}
 {% endif %}
-traefik.http.routers.{{ typesense_identifier }}.entrypoints={{ typesense_container_labels_traefik_entrypoints }}
-traefik.http.routers.{{ typesense_identifier }}.tls={{ typesense_container_labels_traefik_tls | to_json }}
-{% if typesense_container_labels_traefik_tls %}
-traefik.http.routers.{{ typesense_identifier }}.tls.certResolver={{ typesense_container_labels_traefik_tls_certResolver }}
-{% endif %}
-
-traefik.http.services.{{ typesense_identifier }}.loadbalancer.server.port={{ typesense_container_http_port }}
+traefik.http.routers.{{ meilisearch_identifier }}.entrypoints={{ meilisearch_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ meilisearch_identifier }}.tls={{ meilisearch_container_labels_traefik_tls | to_json }}
+{% if meilisearch_container_labels_traefik_tls %}
+traefik.http.routers.{{ meilisearch_identifier }}.tls.certResolver={{ meilisearch_container_labels_traefik_tls_certResolver }}
 {% endif %}
 
-{{ typesense_container_labels_additional_labels }}
+traefik.http.services.{{ meilisearch_identifier }}.loadbalancer.server.port={{ meilisearch_container_http_port }}
+{% endif %}
+
+{{ meilisearch_container_labels_additional_labels }}

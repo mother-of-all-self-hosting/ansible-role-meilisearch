@@ -18,32 +18,32 @@ SPDX-FileCopyrightText: 2024 - 2025 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Setting up Typesense
+# Setting up Meilisearch
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Typesense](https://typesense.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Meilisearch](https://meilisearch.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Typesense is a fast and typo-tolerant fulltext search engine.
+Meilisearch is a fast and typo-tolerant fulltext search engine.
 
-See the project's [documentation](https://typesense.org/docs/) to learn what Typesense does and why it might be useful to you.
+See the project's [documentation](https://meilisearch.org/docs/) to learn what Meilisearch does and why it might be useful to you.
 
 ## Adjusting the playbook configuration
 
-To enable Typesense with this role, add the following configuration to your `vars.yml` file.
+To enable Meilisearch with this role, add the following configuration to your `vars.yml` file.
 
 **Note**: the path should be something like `inventory/host_vars/mash.example.com/vars.yml` if you use the [MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 ```yaml
 ########################################################################
 #                                                                      #
-# typesense                                                            #
+# meilisearch                                                          #
 #                                                                      #
 ########################################################################
 
-typesense_enabled: true
+meilisearch_enabled: true
 
 ########################################################################
 #                                                                      #
-# /typesense                                                           #
+# /meilisearch                                                         #
 #                                                                      #
 ########################################################################
 ```
@@ -53,24 +53,24 @@ typesense_enabled: true
 You also need to specify a bootstrap admin API key. To do so, add the following configuration to your `vars.yml` file. The value can be generated with `pwgen -s 64 1` or in another way.
 
 ```yaml
-typesense_environment_variables_api_key: YOUR_SECRET_KEY_HERE
+meilisearch_environment_variables_api_key: YOUR_SECRET_KEY_HERE
 ```
 
 ### Exposing the instance (optional)
 
-By default, the Typesense instance is not exposed externally, as it is mainly intended to be used in the internal network, connected to other services.
+By default, the Meilisearch instance is not exposed externally, as it is mainly intended to be used in the internal network, connected to other services.
 
 To expose it to the internet, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
-typesense_hostname: "example.com"
+meilisearch_hostname: "example.com"
 
-typesense_container_labels_traefik_enabled: true
+meilisearch_container_labels_traefik_enabled: true
 ```
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
-**Note**: hosting Typesense under a subpath (by configuring the `typesense_path_prefix` variable) does not seem to be possible due to Typesense's technical limitations.
+**Note**: hosting Meilisearch under a subpath (by configuring the `meilisearch_path_prefix` variable) does not seem to be possible due to Meilisearch's technical limitations.
 
 ### Extending the configuration
 
@@ -78,9 +78,9 @@ There are some additional things you may wish to configure about the component.
 
 Take a look at:
 
-- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `typesense_environment_variables_additional_variables` variable
+- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `meilisearch_environment_variables_additional_variables` variable
 
-See [the official documentation](https://typesense.org/docs/) for a complete list of Typesense's config options that you could put in `typesense_environment_variables_additional_variables`.
+See [the official documentation](https://meilisearch.org/docs/) for a complete list of Meilisearch's config options that you could put in `meilisearch_environment_variables_additional_variables`.
 
 ## Installing
 
@@ -94,12 +94,12 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, Typesense becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
+After running the command for installation, Meilisearch becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
 
-See [this page](https://typesense.org/docs/guide/) on the documentation about its usage.
+See [this page](https://meilisearch.org/docs/guide/) on the documentation about its usage.
 
 ## Troubleshooting
 
 ### Check the service's logs
 
-You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu typesense` (or how you/your playbook named the service, e.g. `mash-typesense`).
+You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu meilisearch` (or how you/your playbook named the service, e.g. `mash-meilisearch`).

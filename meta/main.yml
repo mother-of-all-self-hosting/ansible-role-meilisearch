@@ -2,9 +2,9 @@
 galaxy_info:
   author: Suguru Hirahara
   company: progressiv
-  role_name: typesense
+  role_name: meilisearch
   namespace: progressiv
-  description: Typesense
+  description: Meilisearch
   platforms:
     - name: Debian
       versions:

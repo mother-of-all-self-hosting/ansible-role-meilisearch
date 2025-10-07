@@ -4,24 +4,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Perform Typesense installation tasks
-  when: typesense_enabled | bool
+- name: Perform Meilisearch installation tasks
+  when: meilisearch_enabled | bool
   tags:
     - setup-all
-    - setup-typesense
+    - setup-meilisearch
     - install-all
-    - install-typesense
+    - install-meilisearch
   block:
-    - name: Validate Typesense configuration
+    - name: Validate Meilisearch configuration
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-    - name: Install Typesense
+    - name: Install Meilisearch
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
-- name: Perform Typesense uninstallation tasks
-  when: not typesense_enabled | bool
+- name: Perform Meilisearch uninstallation tasks
+  when: not meilisearch_enabled | bool
   tags:
     - setup-all
-    - setup-typesense
+    - setup-meilisearch
   block:
-    - name: Uninstall Typesense
+    - name: Uninstall Meilisearch
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

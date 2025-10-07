@@ -7,12 +7,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
 [Unit]
-Description=Typesense ({{ typesense_identifier }})
-{% for service in typesense_systemd_required_services_list %}
+Description=Meilisearch ({{ meilisearch_identifier }})
+{% for service in meilisearch_systemd_required_services_list %}
 Requires={{ service }}
 After={{ service }}
 {% endfor %}
-{% for service in typesense_systemd_wanted_services_list %}
+{% for service in meilisearch_systemd_wanted_services_list %}
 Wants={{ service }}
 {% endfor %}
 DefaultDependencies=no
@@ -20,43 +20,43 @@ DefaultDependencies=no
 [Service]
 Type=simple
 Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ typesense_identifier }} 2>/dev/null || true'
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ typesense_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ meilisearch_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ meilisearch_identifier }} 2>/dev/null || true'
 
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
-      --name={{ typesense_identifier }} \
+      --name={{ meilisearch_identifier }} \
       --log-driver=none \
-      --user={{ typesense_uid }}:{{ typesense_gid }} \
+      --user={{ meilisearch_uid }}:{{ meilisearch_gid }} \
       --cap-drop=ALL \
       --read-only \
-      --network={{ typesense_container_network }} \
-      {% if typesense_container_http_host_bind_port %}
-      -p {{ typesense_container_http_host_bind_port }}:{{ typesense_container_http_port }} \
+      --network={{ meilisearch_container_network }} \
+      {% if meilisearch_container_http_host_bind_port %}
+      -p {{ meilisearch_container_http_host_bind_port }}:{{ meilisearch_container_http_port }} \
       {% endif %}
-      --env-file={{ typesense_base_path }}/env \
-      --label-file={{ typesense_base_path }}/labels \
-      --mount type=bind,src={{ typesense_data_path }},dst=/data \
-      {% for volume in typesense_container_additional_volumes %}
+      --env-file={{ meilisearch_base_path }}/env \
+      --label-file={{ meilisearch_base_path }}/labels \
+      --mount type=bind,src={{ meilisearch_data_path }},dst=/data \
+      {% for volume in meilisearch_container_additional_volumes %}
       --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options else '' }} \
       {% endfor %}
-      {% for arg in typesense_container_extra_arguments %}
+      {% for arg in meilisearch_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ typesense_container_image }}
+      {{ meilisearch_container_image }}
 
-{% for network in typesense_container_additional_networks %}
-ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ typesense_identifier }}
+{% for network in meilisearch_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ meilisearch_identifier }}
 {% endfor %}
 
-ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ typesense_identifier }}
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ meilisearch_identifier }}
 
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ typesense_identifier }} 2>/dev/null || true'
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ typesense_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ meilisearch_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ meilisearch_identifier }} 2>/dev/null || true'
 
 Restart=always
 RestartSec=30
-SyslogIdentifier={{ typesense_identifier }}
+SyslogIdentifier={{ meilisearch_identifier }}
 
 [Install]
 WantedBy=multi-user.target
