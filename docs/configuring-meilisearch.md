@@ -58,6 +58,9 @@ To do so, add the following configuration to your `vars.yml` file. The value can
 meilisearch_environment_variables_master_key: YOUR_SECRET_KEY_HERE
 ```
 
+>[!WARNING]
+> It is [not recommended](https://www.meilisearch.com/docs/learn/security/basic_security) to use the master key for operations anything but managing other API keys. See [this section](#obtaining-api-keys) below for the instruction to obtain those keys.
+
 ### Exposing the instance (optional)
 
 By default, the Meilisearch instance is not exposed externally, as it is mainly intended to be used in the internal network, connected to other services.
@@ -99,6 +102,14 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 After running the command for installation, Meilisearch becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
 
 See [this page](https://www.meilisearch.com/docs/learn/getting_started/what_is_meilisearch) on the documentation about its usage.
+
+### Obtaining API keys
+
+You can run the playbook with the `obtain-api-keys-meilisearch` tag as below to get the API keys:
+
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=obtain-api-keys-meilisearch
+```
 
 ## Troubleshooting
 

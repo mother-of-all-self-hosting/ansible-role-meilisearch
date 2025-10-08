@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+# The command for obtaining API keys: `ansible-playbook -i inventory/hosts setup.yml --tags=obtain-api-keys-meilisearch`
+
+- name: Ensure Meilisearch service is started
+  ansible.builtin.service:
+    name: "{{ meilisearch_identifier }}"
+    state: started
+    daemon_reload: true
+  register: meilisearch_start
+
+- name: Wait a while, so that Meilisearch can manage to start
+  ansible.builtin.pause:
+    seconds: 7
+  when: meilisearch_start.changed | bool
+
+- name: Run Meilisearch command for querying the /keys endpoint with the master key
+  ansible.builtin.shell: |
+    docker exec --user={{ meilisearch_uid }}:{{ meilisearch_gid }} {{ meilisearch_identifier }} curl -v http://localhost:7700 GET 'http://localhost:7700/keys' -H 'Authorization: Bearer {{ meilisearch_environment_variables_master_key }}'
+  register: meilisearch_keys_endpoint_query_result
+  no_log: true # hide the master key
+
+- name: Parse the JSON output for extracting Meilisearch key names and descriptions
+  ansible.builtin.set_fact:
+    fixed_json: "{{ meilisearch_keys_endpoint_query_result.stdout | replace('{\"status\":\"Meilisearch is running\"}', '') | from_json }}"
+
+- name: Define Meilisearch API key names
+  ansible.builtin.set_fact:
+    api_keys:
+      - name: "Default Search API Key"
+        var_name: "default_search_api_key"
+      - name: "Default Admin API Key"
+        var_name: "default_admin_api_key"
+      - name: "Default Read-Only Admin API Key"
+        var_name: "default_read_only_api_key"
+      - name: "Default Chat API Key"
+        var_name: "default_chat_api_key"
+
+- name: Extract the Meilisearch API keys and descriptions
+  ansible.builtin.set_fact:
+    "{{ item.var_name }}": "{{ fixed_json.results | selectattr('name', 'equalto', item.name) | map(attribute='key') | first }}"
+    "{{ item.var_name }}_description": "{{ fixed_json.results | selectattr('name', 'equalto', item.name) | map(attribute='description') | first }}"
+  loop: "{{ api_keys }}"
+
+- name: Display the Meilisearch extracted keys and descriptions
+  ansible.builtin.debug:
+    msg: "Default Search Key is `{{ default_search_api_key }}` ({{ default_search_api_key_description }}), default Admin API Key is `{{ default_admin_api_key }}` ({{ default_admin_api_key_description }}), default Read-Only Admin API Key is `{{ default_read_only_api_key }}` ({{ default_read_only_api_key_description }}), and default Chat API Key is `{{ default_chat_api_key }}` ({{ default_chat_api_key_description }})."
