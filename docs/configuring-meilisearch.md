@@ -22,7 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 This is an [Ansible](https://www.ansible.com/) role which installs [Meilisearch](https://www.meilisearch.com) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Meilisearch is a fast and typo-tolerant fulltext search engine.
+Meilisearch is a fast and typo-tolerant fulltext search engine with a RESTful search API.
 
 See the project's [documentation](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) to learn what Meilisearch does and why it might be useful to you.
 
