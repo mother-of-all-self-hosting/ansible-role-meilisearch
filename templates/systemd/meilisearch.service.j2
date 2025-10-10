@@ -23,13 +23,15 @@ Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
 ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ meilisearch_identifier }} 2>/dev/null || true'
 ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ meilisearch_identifier }} 2>/dev/null || true'
 
+{#
+  The --read-only option would cause 500 code errors.
+#}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
       --name={{ meilisearch_identifier }} \
       --log-driver=none \
       --user={{ meilisearch_uid }}:{{ meilisearch_gid }} \
       --cap-drop=ALL \
-      --read-only \
       --network={{ meilisearch_container_network }} \
       {% if meilisearch_container_http_host_bind_port %}
       -p {{ meilisearch_container_http_host_bind_port }}:{{ meilisearch_container_http_port }} \
