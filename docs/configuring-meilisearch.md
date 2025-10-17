@@ -111,6 +111,16 @@ You can run the playbook with the `obtain-api-keys-meilisearch` tag as below to 
 ansible-playbook -i inventory/hosts setup.yml --tags=obtain-api-keys-meilisearch
 ```
 
+### Making database backups
+
+To create a backup of the database, you can run the playbook with the `backup-meilisearch` tag as below:
+
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch -e api_key=YOUR_API_KEY_HERE
+```
+
+Make sure to replace `YOUR_API_KEY_HERE` with yours.
+
 ## Troubleshooting
 
 ### Check the service's logs

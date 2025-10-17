@@ -25,6 +25,14 @@
     - name: Obtain API keys for Meilisearch
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/obtain_api_keys.yml"
 
+- name: Perform Meilisearch backup tasks
+  when: meilisearch_enabled | bool
+  tags:
+    - backup-meilisearch
+  block:
+    - name: Run snapshot for Meilisearch
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/snapshots.yml"
+
 - name: Perform Meilisearch uninstallation tasks
   when: not meilisearch_enabled | bool
   tags:
