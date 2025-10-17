@@ -61,6 +61,18 @@ meilisearch_environment_variables_master_key: YOUR_SECRET_KEY_HERE
 >[!WARNING]
 > It is [not recommended](https://www.meilisearch.com/docs/learn/security/basic_security) to use the master key for operations anything but managing other API keys. See [this section](#obtaining-api-keys) below for the instruction to obtain those keys.
 
+### Disabling dumpless upgrade
+
+The role is configured to run [dumpless upgrades](https://www.meilisearch.com/docs/learn/update_and_migration/updating#dumpless-upgrade) automatically, so that the manual intervention on Docker image upgrades can be avoided.
+
+As the feature is experimental yet, you can disable it by adding the following configuration to your `vars.yml` file:
+
+```yaml
+meilisearch_dumpless_upgrade_enabled: false
+```
+
+Consult [this section](https://www.meilisearch.com/docs/learn/update_and_migration/updating#using-a-dump) on the official documentation to upgrade with dump files.
+
 ### Exposing the instance (optional)
 
 By default, the Meilisearch instance is not exposed externally, as it is mainly intended to be used in the internal network, connected to other services.

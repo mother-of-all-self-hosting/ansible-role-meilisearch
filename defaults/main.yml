@@ -175,6 +175,9 @@ meilisearch_systemd_wanted_services_list_default: []
 meilisearch_systemd_wanted_services_list_auto: []
 meilisearch_systemd_wanted_services_list_custom: []
 
+# Control if dumpess upgrade is enabled
+meilisearch_dumpless_upgrade_enabled: true
+
 # Specify the instance’s environment
 # See: https://www.meilisearch.com/docs/learn/self_hosted/configure_meilisearch_at_launch#environment
 # Valid values: production, development

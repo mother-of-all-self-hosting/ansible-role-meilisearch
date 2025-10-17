@@ -45,7 +45,11 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in meilisearch_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
+      {% if meilisearch_dumpless_upgrade_enabled %}
+      {{ meilisearch_container_image }} meilisearch --experimental-dumpless-upgrade
+      {% else %}
       {{ meilisearch_container_image }}
+      {% endif %}
 
 {% for network in meilisearch_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ meilisearch_identifier }}
