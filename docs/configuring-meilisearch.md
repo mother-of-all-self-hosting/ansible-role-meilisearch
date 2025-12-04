@@ -26,6 +26,13 @@ Meilisearch is a fast and typo-tolerant fulltext search engine with a RESTful se
 
 See the project's [documentation](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) to learn what Meilisearch does and why it might be useful to you.
 
+>[!NOTE]
+> Please note that the `v1.28.0` has introduced the "pro" and "peasant" editions separation:
+>
+> "This release introduces improvements to language support and separates the community and enterprise binary editions. We now offer binaries [under the BUSL-1.1 license](https://redirect.github.com/meilisearch/meilisearch/blob/main/LICENSE-EE), identified by the "enterprise" term in their names, in addition to our MIT-licensed binaries, which retain their original names. Docker images for the enterprise edition are available in the [`getmeili/meilisearch-enterprise`](https://hub.docker.com/r/getmeili/meilisearch-enterprise/tags) repository."
+>
+> See: <https://github.com/mother-of-all-self-hosting/ansible-role-meilisearch/pull/8>
+
 ## Adjusting the playbook configuration
 
 To enable Meilisearch with this role, add the following configuration to your `vars.yml` file.
