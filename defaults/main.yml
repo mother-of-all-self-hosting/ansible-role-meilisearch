@@ -116,7 +116,7 @@ meilisearch_container_labels_additional_labels: "{{ meilisearch_container_labels
 meilisearch_container_labels_additional_labels_auto: {}
 meilisearch_container_labels_additional_labels_custom: {}
 
-# A list of extra arguments to pass to the container (`docker run` command)
+# A list of extra arguments to pass to the container (`docker create` command)
 meilisearch_container_extra_arguments: "{{ meilisearch_container_extra_arguments_auto + meilisearch_container_extra_arguments_custom }}"
 meilisearch_container_extra_arguments_auto: []
 meilisearch_container_extra_arguments_custom: []
