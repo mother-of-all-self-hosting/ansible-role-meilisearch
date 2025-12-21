@@ -27,7 +27,7 @@ meilisearch_scheme: https
 # The hostname at which Meilisearch is served.
 meilisearch_hostname: ""
 
-# The path at which Meilisearch is exposed.
+# The path at which Meilisearch is served.
 # This value must either be `/` or not end with a slash (e.g. `/meilisearch`).
 #
 # Hosting Meilisearch under a subpath does not seem to be possible due to Meilisearch's
