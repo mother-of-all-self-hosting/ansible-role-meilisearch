@@ -56,4 +56,6 @@ traefik.http.routers.{{ meilisearch_identifier }}.tls.certResolver={{ meilisearc
 traefik.http.services.{{ meilisearch_identifier }}.loadbalancer.server.port={{ meilisearch_container_http_port }}
 {% endif %}
 
-{{ meilisearch_container_labels_additional_labels }}
+{% for arg in meilisearch_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
