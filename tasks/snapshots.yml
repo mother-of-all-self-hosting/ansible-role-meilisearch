@@ -6,7 +6,7 @@
 ---
 # The command for obtaining API keys: `ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch -e api_key=YOUR_API_KEY_HERE`
 
-- name: Fail if playbook called incorrectly
+- name: Fail if playbook called incorrectly for Meilisearch
   ansible.builtin.fail:
     msg: "The `api_key` variable needs to be provided via --extra-vars"
   when: "api_key is not defined"
