@@ -9,7 +9,7 @@
 - name: Fail if playbook called incorrectly for Meilisearch
   ansible.builtin.fail:
     msg: "The `api_key` variable needs to be provided via --extra-vars"
-  when: "api_key is not defined"
+  when: "api_key is not defined or api_key == 'YOUR_API_KEY_HERE'"
 
 - name: Ensure Meilisearch service is started
   ansible.builtin.service:
