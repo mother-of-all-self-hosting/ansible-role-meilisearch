@@ -40,7 +40,6 @@ meilisearch_container_image_tag: "{{ meilisearch_version }}"
 meilisearch_container_image_registry_prefix: "{{ meilisearch_container_image_registry_prefix_upstream }}"
 meilisearch_container_image_registry_prefix_upstream: "{{ meilisearch_container_image_registry_prefix_upstream_default }}"
 meilisearch_container_image_registry_prefix_upstream_default: docker.io/
-meilisearch_container_image_force_pull: "{{ meilisearch_container_image.endswith(':latest') }}"
 # TODO: add tasks to self-build the image
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
