@@ -24,6 +24,8 @@
   when: meilisearch_start.changed | bool
 
 - name: Run Meilisearch command for creating a snapshot
-  ansible.builtin.shell: |
-    docker exec --user={{ meilisearch_uid }}:{{ meilisearch_gid }} {{ meilisearch_identifier }} curl -X POST 'http://localhost:7700/snapshots' -H 'Authorization: Bearer {{ api_key }}'
+  ansible.builtin.shell: |-
+    {{ devture_systemd_docker_base_host_command_docker }} exec
+    --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
+    {{ meilisearch_identifier }} curl -X POST 'http://localhost:7700/snapshots' -H 'Authorization: Bearer {{ api_key }}'
   register: meilisearch_snapshots_result
