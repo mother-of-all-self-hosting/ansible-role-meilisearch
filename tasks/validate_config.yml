@@ -50,11 +50,12 @@
     - name: Fail if Traefik settings required for Meilisearch are not defined
       ansible.builtin.fail:
         msg: >-
-          You need to define a required configuration setting (`{{ item }}`).
-      when: "lookup('vars', item, default='') | string | length == 0"
+          You need to define a required configuration setting (`{{ item.name }}`).
+      when: "item.when | bool and lookup('vars', item.name, default='') | string | length == 0"
       with_items:
-        - meilisearch_container_labels_traefik_hostname
-        - meilisearch_container_labels_traefik_path_prefix
+        - { "name": "meilisearch_container_labels_traefik_hostname", when: true }
+        - { "name": "meilisearch_container_labels_traefik_path_prefix", when: true }
+        - { "name": "meilisearch_container_labels_traefik_middleware_basic_auth_users", when: "{{ meilisearch_container_labels_traefik_middleware_basic_auth_enabled }}" }
 
     - name: Fail if meilisearch_container_labels_traefik_path_prefix is different than /
       ansible.builtin.fail:
