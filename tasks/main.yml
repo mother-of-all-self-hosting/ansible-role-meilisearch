@@ -20,6 +20,7 @@
 - name: Perform Meilisearch API keys output tasks
   when: meilisearch_enabled | bool
   tags:
+    - molecule-notest
     - obtain-api-keys-meilisearch
   block:
     - name: Obtain API keys for Meilisearch
@@ -28,6 +29,7 @@
 - name: Perform Meilisearch backup tasks
   when: meilisearch_enabled | bool
   tags:
+    - molecule-notest
     - backup-meilisearch
   block:
     - name: Run snapshot for Meilisearch

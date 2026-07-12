@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify Meilisearch systemd service
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for Meilisearch service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: meilisearch.service
+      register: meilisearch_service
+      until: meilisearch_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert Meilisearch service is active
+      ansible.builtin.assert:
+        that: meilisearch_service.status.ActiveState == 'active'
+        fail_msg: "meilisearch.service not active ({{ meilisearch_service.status.ActiveState }})"
+        success_msg: "meilisearch.service is active"
+
+    - name: Wait for Meilisearch HTTP endpoint to respond (up to 10m)
+      ansible.builtin.uri:
+        url: "http://localhost:7700/"
+        method: GET
+        status_code: [200, 302]
+        follow_redirects: none
+      register: meilisearch_endpoint
+      until: meilisearch_endpoint.status in [200, 302]
+      retries: 120
+      delay: 5
+
+    - name: Assert Meilisearch HTTP endpoint responds
+      ansible.builtin.assert:
+        that: meilisearch_endpoint.status in [200, 302]
+        fail_msg: "Meilisearch did not respond as expected ({{ meilisearch_endpoint.status | default('no response') }})"
+        success_msg: "Meilisearch responded with {{ meilisearch_endpoint.status }}"
+
+    - name: Show Meilisearch systemd service status summary
+      ansible.builtin.debug:
+        msg:
+          - "Meilisearch systemd: {{ meilisearch_service.status.ActiveState }}"
+          - "Meilisearch HTTP: {{ meilisearch_endpoint.status }}"
