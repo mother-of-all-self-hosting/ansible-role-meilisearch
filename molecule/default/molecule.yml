@@ -27,6 +27,10 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        meilisearch_debug_service_enabled: false
+
+        # Variables for Meilisearch
         meilisearch_uid: 1000
         meilisearch_gid: 1000
         meilisearch_hostname: meilisearch
