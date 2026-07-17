@@ -33,7 +33,8 @@ provisioner:
         # Variables for Meilisearch
         meilisearch_uid: 1000
         meilisearch_gid: 1000
-        meilisearch_hostname: meilisearch
+        meilisearch_scheme: http
+        meilisearch_hostname: localhost
         meilisearch_container_labels_traefik_enabled: false
         meilisearch_container_http_host_bind_port: 7700
         meilisearch_environment_variables_master_key: random3d3a1e6e19ceea1faf207a923d50a1844adf235b3ed6833fd9579c13c7
