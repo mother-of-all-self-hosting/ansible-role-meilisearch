@@ -30,7 +30,7 @@
 - name: Fail is the master key is not at least 16-bytes-long
   ansible.builtin.fail:
     msg: "The master key must be at least 16-bytes-long"
-  when: "meilisearch_environment_variables_master_key | length < 16"
+  when: "meilisearch_environment_variables_master_key | length < 32"
 
 - name: Fail if Meilisearch environment is invalid
   ansible.builtin.fail:
