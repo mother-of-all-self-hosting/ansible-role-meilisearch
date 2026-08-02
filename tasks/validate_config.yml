@@ -27,7 +27,7 @@
     - meilisearch_container_network
     - meilisearch_environment_variables_master_key
 
-- name: Fail is the master key is not at least 16-bytes-long
+- name: Fail if the master key is not at least 16-bytes-long
   ansible.builtin.fail:
     msg: "The master key must be at least 16-bytes-long"
   when: "meilisearch_environment_variables_master_key | length < 32"
