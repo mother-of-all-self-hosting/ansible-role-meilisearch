@@ -66,7 +66,7 @@ meilisearch_environment_variables_master_key: YOUR_SECRET_KEY_HERE
 ```
 
 >[!WARNING]
-> It is [not recommended](https://www.meilisearch.com/docs/learn/security/basic_security) to use the master key for operations anything but managing other API keys. See [this section](#obtaining-api-keys) below for the instruction to obtain those keys.
+> It is [not recommended](https://www.meilisearch.com/docs/resources/self_hosting/security/basic_security#obtaining-api-keys-in-a-self-hosted-instance) to use the master key for operations anything but managing other API keys. See [this section](#obtaining-api-keys) below for the instruction to obtain those keys.
 
 ### Disabling dumpless upgrade
 
@@ -120,7 +120,7 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, Meilisearch becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
 
-See [this page](https://www.meilisearch.com/docs/learn/getting_started/what_is_meilisearch) on the documentation about its usage.
+See [this page](https://www.meilisearch.com/docs/getting_started/overview) on the documentation about its usage.
 
 ### Obtaining API keys
 
