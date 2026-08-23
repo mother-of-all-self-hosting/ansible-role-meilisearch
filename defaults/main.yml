@@ -16,7 +16,7 @@ meilisearch_identifier: meilisearch
 meilisearch_base_path: "/{{ meilisearch_identifier }}"
 meilisearch_data_path: "{{ meilisearch_base_path }}/data"
 
-# renovate: datasource=docker depName=getmeili/meilisearch
+# renovate: datasource=docker depName=getmeili/meilisearch versioning=semver
 meilisearch_version: v1.50.0
 
 meilisearch_uid: ""
