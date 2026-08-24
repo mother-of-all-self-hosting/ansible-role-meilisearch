@@ -19,7 +19,7 @@ Check [`defaults/main.yml`](defaults/main.yml) for the full list of supported op
 💡 For an Ansible playbook which integrates this role and makes it easier to use, see the [Mother-of-All-Self-Hosting Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 >[!NOTE]
-> Please note that the `v1.28.0` has introduced the "pro" and "peasant" editions separation:
+> Please note that `v1.28.0` has introduced a separation into community and enterprise editions:
 >
 > "This release introduces improvements to language support and separates the community and enterprise binary editions. We now offer binaries [under the BUSL-1.1 license](https://redirect.github.com/meilisearch/meilisearch/blob/main/LICENSE-EE), identified by the "enterprise" term in their names, in addition to our MIT-licensed binaries, which retain their original names. Docker images for the enterprise edition are available in the [`getmeili/meilisearch-enterprise`](https://hub.docker.com/r/getmeili/meilisearch-enterprise/tags) repository."
 >
