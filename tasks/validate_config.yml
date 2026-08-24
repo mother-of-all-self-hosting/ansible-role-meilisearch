@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
 # SPDX-FileCopyrightText: 2023 MASH project contributors
-# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 - 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -27,9 +27,17 @@
     - meilisearch_container_network
     - meilisearch_environment_variables_master_key
 
-- name: Fail if the master key is not at least 16-bytes-long
+# Meilisearch itself refuses to start in a production environment with a master key
+# shorter than 16 bytes ("The master key must be at least 16 bytes in a production
+# environment. The provided key is only 15 bytes."). This role asks for 32 characters,
+# twice that, because the key is the credential that guards every route of an instance
+# which is often reachable from other containers on the host.
+- name: Fail if the master key is shorter than 32 characters
   ansible.builtin.fail:
-    msg: "The master key must be at least 16-bytes-long"
+    msg: >-
+      meilisearch_environment_variables_master_key must be at least 32 characters long
+      (the provided one is {{ meilisearch_environment_variables_master_key | length }}).
+      Generate one with `pwgen -s 64 1` or in another way.
   when: "meilisearch_environment_variables_master_key | length < 32"
 
 - name: Fail if Meilisearch environment is invalid

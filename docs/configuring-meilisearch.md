@@ -57,7 +57,7 @@ meilisearch_enabled: true
 
 ### Set the master key
 
-You also need to specify the instance's master key, a UTF-8 string of at least 16 bytes.
+You also need to specify the instance's master key. Meilisearch requires a UTF-8 string of at least 16 bytes; this role asks for at least 32 characters, since the master key guards every route of the instance.
 
 To do so, add the following configuration to your `vars.yml` file. The value can be generated with `pwgen -s 64 1` or in another way.
 
