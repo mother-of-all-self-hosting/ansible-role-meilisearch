@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023, 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -27,5 +27,37 @@
   ansible.builtin.shell: |-
     {{ devture_systemd_docker_base_host_command_docker }} exec
     --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
-    {{ meilisearch_identifier }} curl -X POST 'http://localhost:7700/snapshots' -H 'Authorization: Bearer {{ api_key }}'
+    {{ meilisearch_identifier }} curl -sSf -X POST
+    -H 'Authorization: Bearer {{ api_key }}'
+    'http://localhost:{{ meilisearch_container_http_port }}/snapshots'
   register: meilisearch_snapshots_result
+  no_log: true # hide the API key
+
+# Meilisearch answers the request above with a `202 Accepted` and a task identifier;
+# the snapshot itself is written afterwards, and can still fail. Reporting success on
+# the acknowledgement alone would tell somebody their backup was taken when it was not.
+- name: Wait for the Meilisearch snapshot task to finish
+  ansible.builtin.shell: |-
+    {{ devture_systemd_docker_base_host_command_docker }} exec
+    --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
+    {{ meilisearch_identifier }} curl -sSf
+    -H 'Authorization: Bearer {{ api_key }}'
+    'http://localhost:{{ meilisearch_container_http_port }}/tasks/{{ (meilisearch_snapshots_result.stdout | from_json).taskUid }}'
+  register: meilisearch_snapshot_task_result
+  until: "(meilisearch_snapshot_task_result.stdout | from_json).status in ['succeeded', 'failed', 'canceled']"
+  retries: 60
+  delay: 5
+  no_log: true # hide the API key
+
+- name: Fail if the Meilisearch snapshot was not created
+  ansible.builtin.fail:
+    msg: >-
+      Creating a Meilisearch snapshot did not succeed:
+      {{ meilisearch_snapshot_task_result.stdout | from_json }}
+  when: "(meilisearch_snapshot_task_result.stdout | from_json).status != 'succeeded'"
+
+- name: Report the created Meilisearch snapshot
+  ansible.builtin.debug:
+    msg: >-
+      A Meilisearch snapshot has been created below `{{ meilisearch_data_path }}/snapshots`
+      on the server.

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023, 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -22,13 +22,16 @@
   ansible.builtin.shell: |-
     {{ devture_systemd_docker_base_host_command_docker }} exec
     --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
-    {{ meilisearch_identifier }} curl -v http://localhost:7700 GET 'http://localhost:7700/keys' -H 'Authorization: Bearer {{ meilisearch_environment_variables_master_key }}'
+    {{ meilisearch_identifier }} curl -sSf
+    -H 'Authorization: Bearer {{ meilisearch_environment_variables_master_key }}'
+    'http://localhost:{{ meilisearch_container_http_port }}/keys'
   register: meilisearch_keys_endpoint_query_result
   no_log: true # hide the master key
 
 - name: Parse the JSON output for extracting Meilisearch key names and descriptions
   ansible.builtin.set_fact:
-    fixed_json: "{{ meilisearch_keys_endpoint_query_result.stdout | replace('{\"status\":\"Meilisearch is running\"}', '') | from_json }}"
+    meilisearch_keys: "{{ meilisearch_keys_endpoint_query_result.stdout | from_json }}"
+  no_log: true # hide the API keys
 
 - name: Define Meilisearch API key names
   ansible.builtin.set_fact:
@@ -42,10 +45,13 @@
       - name: "Default Chat API Key"
         var_name: "default_chat_api_key"
 
+# `default` covers a Meilisearch that no longer seeds one of the keys named above,
+# so that a renamed default key reports itself rather than aborting the run with a
+# Jinja error about an undefined value.
 - name: Extract the Meilisearch API keys and descriptions
   ansible.builtin.set_fact:
-    "{{ item.var_name }}": "{{ fixed_json.results | selectattr('name', 'equalto', item.name) | map(attribute='key') | first }}"
-    "{{ item.var_name }}_description": "{{ fixed_json.results | selectattr('name', 'equalto', item.name) | map(attribute='description') | first }}"
+    "{{ item.var_name }}": "{{ meilisearch_keys.results | selectattr('name', 'equalto', item.name) | map(attribute='key') | first | default('<not present>', true) }}"
+    "{{ item.var_name }}_description": "{{ meilisearch_keys.results | selectattr('name', 'equalto', item.name) | map(attribute='description') | first | default('<not present>', true) }}"
   loop: "{{ api_keys }}"
 
 - name: Display the Meilisearch extracted keys and descriptions
