@@ -45,7 +45,9 @@
     'http://localhost:{{ meilisearch_container_http_port }}/tasks/{{ (meilisearch_snapshots_result.stdout | from_json).taskUid }}'
   register: meilisearch_snapshot_task_result
   until: "(meilisearch_snapshot_task_result.stdout | from_json).status in ['succeeded', 'failed', 'canceled']"
-  retries: 60
+  # Snapshotting copies the whole database, so how long it takes is a question about
+  # how much data there is. Twenty minutes is generous for that and still bounded.
+  retries: 240
   delay: 5
   no_log: true # hide the API key
 
