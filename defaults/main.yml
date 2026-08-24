@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
-# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 - 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2024 Julian-Samuel Gebühr
 # SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
 # SPDX-FileCopyrightText: 2025 MASH project contributors
@@ -17,7 +17,7 @@ meilisearch_base_path: "/{{ meilisearch_identifier }}"
 meilisearch_data_path: "{{ meilisearch_base_path }}/data"
 
 # renovate: datasource=docker depName=getmeili/meilisearch versioning=semver
-meilisearch_version: v1.50.0
+meilisearch_version: v1.53.1
 
 meilisearch_uid: ""
 meilisearch_gid: ""
@@ -220,7 +220,17 @@ meilisearch_container_cleanup_command: |
 # Specify the timezone
 meilisearch_environment_variables_tz: UTC
 
-# Control if dumpess upgrade is enabled
+# Controls whether Meilisearch upgrades its database in place on startup.
+#
+# Meilisearch refuses to start on a database written by a different version of itself
+# (down to the patch level), so without this every image bump would need a dump and a
+# manual reimport. With it, the container is passed `--upgrade-db` and migrates on its own.
+#
+# Upgrading is one-way: once the database has been migrated, an older Meilisearch
+# refuses to open it ("Downgrade is not supported"). Rolling an upgrade back means
+# restoring a dump or a snapshot.
+#
+# See: https://www.meilisearch.com/docs/learn/update_and_migration/updating#dumpless-upgrade
 meilisearch_dumpless_upgrade_enabled: true
 
 # Specify the instance’s environment

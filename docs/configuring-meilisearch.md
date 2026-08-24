@@ -1,6 +1,6 @@
 <!--
 SPDX-FileCopyrightText: 2020 - 2024 MDAD project contributors
-SPDX-FileCopyrightText: 2020 - 2024 Slavi Pantaleev
+SPDX-FileCopyrightText: 2020 - 2024, 2026 Slavi Pantaleev
 SPDX-FileCopyrightText: 2020 Aaron Raimist
 SPDX-FileCopyrightText: 2020 Chris van Dijk
 SPDX-FileCopyrightText: 2020 Dominik Zajac
@@ -70,9 +70,12 @@ meilisearch_environment_variables_master_key: YOUR_SECRET_KEY_HERE
 
 ### Disabling dumpless upgrade
 
-The role is configured to run [dumpless upgrades](https://www.meilisearch.com/docs/learn/update_and_migration/updating#dumpless-upgrade) automatically, so that the manual intervention on Docker image upgrades can be avoided.
+Meilisearch refuses to start on a database written by a different version of itself, down to the patch level (`Your database version (1.53.0) is incompatible with your current engine version (1.53.1)`). The role therefore passes `--upgrade-db` to the container by default, so that it performs a [dumpless upgrade](https://www.meilisearch.com/docs/learn/update_and_migration/updating#dumpless-upgrade) of its own database and Docker image upgrades need no manual intervention.
 
-As the feature is experimental yet, you can disable it by adding the following configuration to your `vars.yml` file:
+>[!WARNING]
+> Upgrading the database is a one-way door: an older Meilisearch refuses to open a database that a newer one has migrated (`Downgrade is not supported`). To be able to roll an upgrade back, take a [snapshot](#making-database-backups) or a dump first.
+
+You can disable the automatic upgrade by adding the following configuration to your `vars.yml` file:
 
 ```yaml
 meilisearch_dumpless_upgrade_enabled: false
