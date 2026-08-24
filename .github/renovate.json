@@ -1,5 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Patch releases are deliberately not automerged here, unlike in most other roles in this fleet.",
+    "Meilisearch stamps its own version into the database it writes and refuses to open a database written by any other version of itself, down to the patch level. A v1.53.0 database put in front of v1.53.1 is turned away with 'Your database version (1.53.0) is incompatible with your current engine version (1.53.1)'. There is no such thing as a format-stable patch release here; every bump is a migration.",
+    "This role enables meilisearch_dumpless_upgrade_enabled by default, so the container is passed --upgrade-db and performs that migration unattended on the next restart. The migration is one-way: v1.53.0 answers a database that v1.53.1 has already migrated with 'Downgrade is not supported'. An automerged patch would therefore rewrite the users' search database with nobody in the loop, and backing it out would mean restoring a snapshot or a dump - which this role only takes when somebody asks for one, via the backup-meilisearch tag.",
+    "The Molecule run on the pull request is exactly the checkpoint that automerging would remove, and it earns its keep on this repository: it is what caught v1.51.0 renaming --experimental-dumpless-upgrade to --upgrade-db, a change that left the container exiting on startup while its systemd unit still reported itself active."
+  ],
   "extends": [
     "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
   ]
