@@ -1,14 +1,43 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify Meilisearch systemd service
+- name: Verify Meilisearch
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    meilisearch_verify_base_url: "http://127.0.0.1:{{ meilisearch_container_http_host_bind_port }}"
+
+    # `meilisearch_data_path` in defaults/main.yml is built out of other variables
+    # rather than being a literal, so it cannot be read back from the role's defaults
+    # the way `meilisearch_version` can. This scenario leaves `meilisearch_identifier`
+    # at its default, which puts the data below /meilisearch.
+    meilisearch_verify_data_path: /meilisearch/data
+
+    meilisearch_verify_index: mash-molecule
+    # A word no Meilisearch ships with, so that a hit on it can only come from the
+    # document seeded below and not from anything the engine invented.
+    meilisearch_verify_marker: gonzoborealis
+
   tasks:
+    # The role is not included in this playbook, so its defaults are not in scope.
+    # Reading defaults/main.yml directly keeps the version assertion tied to the value
+    # that Renovate bumps, with nothing to keep in sync in this scenario. include_vars
+    # reads from the controller.
+    #
+    # Only values describing the role itself may be read from this namespace. Anything
+    # this scenario tunes (the master key, the published port) comes from the
+    # scenario's group_vars instead.
+    - name: Load the Meilisearch role defaults
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: meilisearch_defaults
+
     - name: Wait for Meilisearch service to become active (up to 180s)
       ansible.builtin.systemd:
         name: meilisearch.service
@@ -29,25 +58,291 @@
         cmd: journalctl -xeu meilisearch.service
       changed_when: false
 
-    - name: Wait for Meilisearch HTTP endpoint to respond (up to 10m)
+    # The negative control, and deliberately the first thing asked of the HTTP surface.
+    #
+    # `active` on the unit only means that `docker start` has not returned yet. The unit
+    # restarts the container forever, so a Meilisearch that rejects its own command line
+    # and exits immediately - which is precisely what every image after v1.50.0 did while
+    # the role still passed the removed `--experimental-dumpless-upgrade` - keeps the unit
+    # looking active while nothing is listening at all.
+    #
+    # A 401 here is worth more than a 200 would be. Meilisearch only guards its routes
+    # once it has a master key: an instance started without one answers this same
+    # /indexes request with a 200 and a list of indexes (verified standalone against
+    # v1.53.1). So the refusal is what proves that the key this role rendered into
+    # `env` was read by the process, and not merely written to disk beside it.
+    #
+    # `/` and `/health` stay open even on a keyed instance, which is why neither is used
+    # here; a probe of those would pass against an instance with no key at all.
+    - name: Wait for Meilisearch to reject an unauthenticated request (up to 10m)
       ansible.builtin.uri:
-        url: "http://localhost:7700/"
+        url: "{{ meilisearch_verify_base_url }}/indexes"
         method: GET
-        status_code: [200, 302]
+        status_code: [401]
         follow_redirects: none
-      register: meilisearch_endpoint
-      until: meilisearch_endpoint.status in [200, 302]
+      register: meilisearch_unauthenticated
+      until: meilisearch_unauthenticated.status == 401
       retries: 120
       delay: 5
 
-    - name: Assert Meilisearch HTTP endpoint responds
+    - name: Assert Meilisearch rejects unauthenticated requests
       ansible.builtin.assert:
-        that: meilisearch_endpoint.status in [200, 302]
-        fail_msg: "Meilisearch did not respond as expected ({{ meilisearch_endpoint.status | default('no response') }})"
-        success_msg: "Meilisearch responded with {{ meilisearch_endpoint.status }}"
+        that: meilisearch_unauthenticated.status == 401
+        fail_msg: "Meilisearch answered {{ meilisearch_unauthenticated.status }} to an unauthenticated request rather than 401"
+        success_msg: "Meilisearch rejects unauthenticated requests"
 
-    - name: Show Meilisearch systemd service status summary
+    # Separates "no credential" from "wrong credential": Meilisearch answers a missing
+    # key with 401 and a key it does not recognize with 403. Without this, an instance
+    # that turned every request away regardless of what it carried would still satisfy
+    # the probe above.
+    - name: Attempt to query Meilisearch with a key it does not know
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/indexes"
+        method: GET
+        status_code: [403]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}-wrong"
+      register: meilisearch_wrong_key
+
+    - name: Assert Meilisearch rejects a key it does not know
+      ansible.builtin.assert:
+        that: meilisearch_wrong_key.status == 403
+        fail_msg: "Meilisearch answered {{ meilisearch_wrong_key.status }} to an unknown key rather than 403"
+        success_msg: "Meilisearch rejects a key it does not know"
+
+    # /version is itself behind the master key, so a 200 here is the positive half of
+    # the control above: the configured key opens what the absent and the wrong one
+    # could not.
+    - name: Query the Meilisearch version with the configured master key
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/version"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_version_info
+
+    # Meilisearch reports its version without the leading `v` that the tags and the role
+    # default carry, so that is stripped before comparing. Compared as a prefix, and
+    # escaped, so that a version reported with a build suffix keeps matching and the dots
+    # are not read as regex wildcards.
+    - name: Assert the running Meilisearch is the version this role installs
+      ansible.builtin.assert:
+        that: meilisearch_version_info.json.pkgVersion is match(meilisearch_defaults.meilisearch_version | regex_replace('^v', '') | regex_escape)
+        fail_msg: >-
+          Meilisearch reports {{ meilisearch_version_info.json.pkgVersion }},
+          expected {{ meilisearch_defaults.meilisearch_version }}
+        success_msg: "Meilisearch reports {{ meilisearch_version_info.json.pkgVersion }}"
+
+    # Config reach beyond the master key. The role writes whatever
+    # `meilisearch_environment_variables_additional_variables` holds into `env`, and this
+    # scenario puts Meilisearch's metrics feature flag there. The flag is off by default
+    # (verified standalone against v1.53.1), and Meilisearch reports its own view of it,
+    # so a `true` here can only come from the file the role rendered being read.
+    - name: Query the experimental features the Meilisearch process is running with
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/experimental-features"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_experimental_features
+
+    - name: Assert the additional environment variables reached the Meilisearch process
+      ansible.builtin.assert:
+        that: meilisearch_experimental_features.json.metrics
+        fail_msg: >-
+          Meilisearch reports the metrics feature as
+          {{ meilisearch_experimental_features.json.metrics }},
+          so MEILI_EXPERIMENTAL_ENABLE_METRICS did not reach it
+        success_msg: "Meilisearch runs with the metrics feature this scenario enabled"
+
+    # The same setting seen from the other side: with the flag off, this route answers
+    # 400 `feature_not_enabled` rather than serving anything.
+    - name: Query the Meilisearch metrics endpoint
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/metrics"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        return_content: true
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_metrics
+
+    - name: Assert Meilisearch serves Prometheus metrics
+      ansible.builtin.assert:
+        that: "'meilisearch_db_size_bytes' in meilisearch_metrics.content"
+        fail_msg: "Meilisearch served no recognizable metrics: {{ meilisearch_metrics.content[:200] | default('no content') }}"
+        success_msg: "Meilisearch serves Prometheus metrics"
+
+    # Everything above could still be true of a Meilisearch that cannot actually index
+    # or search anything. What follows writes a document in and reads it back out by
+    # searching for it, which is the whole point of running a search engine.
+    #
+    # The index is removed first so that this playbook can be run against the same
+    # instance more than once. Meilisearch answers a deletion of an index that is not
+    # there with an accepted task that then fails as `index_not_found`, so the outcome
+    # of this one is deliberately not asserted - only that it reached a terminal state
+    # before the creation below is attempted.
+    - name: Remove any leftover Meilisearch verification index
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/indexes/{{ meilisearch_verify_index }}"
+        method: DELETE
+        status_code: [202]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_index_deletion
+
+    - name: Wait for the Meilisearch index deletion task to reach a terminal state
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/tasks/{{ meilisearch_index_deletion.json.taskUid }}"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_index_deletion_task
+      until: meilisearch_index_deletion_task.json.status in ['succeeded', 'failed', 'canceled']
+      retries: 24
+      delay: 5
+
+    - name: Create an index in Meilisearch
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/indexes"
+        method: POST
+        status_code: [202]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+        body_format: json
+        body:
+          uid: "{{ meilisearch_verify_index }}"
+          primaryKey: id
+      register: meilisearch_index_creation
+
+    # Meilisearch answers with `202 Accepted` and a task identifier, and does the work
+    # afterwards. Taking the acknowledgement for a result would let an index that never
+    # got created pass as one that did, so every write below is followed to its task.
+    - name: Wait for the Meilisearch index creation task to finish
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/tasks/{{ meilisearch_index_creation.json.taskUid }}"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_index_creation_task
+      until: meilisearch_index_creation_task.json.status in ['succeeded', 'failed', 'canceled']
+      retries: 24
+      delay: 5
+
+    - name: Assert the Meilisearch index was created
+      ansible.builtin.assert:
+        that: meilisearch_index_creation_task.json.status == 'succeeded'
+        fail_msg: "Creating the index did not succeed: {{ meilisearch_index_creation_task.json }}"
+        success_msg: "Meilisearch created the '{{ meilisearch_verify_index }}' index"
+
+    - name: Add documents to the Meilisearch index
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/indexes/{{ meilisearch_verify_index }}/documents"
+        method: POST
+        status_code: [202]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+        body_format: json
+        body:
+          - id: 1
+            title: "a document carrying the {{ meilisearch_verify_marker }} marker"
+          - id: 2
+            title: a document carrying no marker at all
+      register: meilisearch_document_addition
+
+    - name: Wait for the Meilisearch document addition task to finish
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/tasks/{{ meilisearch_document_addition.json.taskUid }}"
+        method: GET
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+      register: meilisearch_document_task
+      until: meilisearch_document_task.json.status in ['succeeded', 'failed', 'canceled']
+      retries: 24
+      delay: 5
+
+    - name: Assert the documents were indexed by Meilisearch
+      ansible.builtin.assert:
+        that: meilisearch_document_task.json.status == 'succeeded'
+        fail_msg: "Indexing the documents did not succeed: {{ meilisearch_document_task.json }}"
+        success_msg: "Meilisearch indexed the seeded documents"
+
+    - name: Search the Meilisearch index for the seeded document
+      ansible.builtin.uri:
+        url: "{{ meilisearch_verify_base_url }}/indexes/{{ meilisearch_verify_index }}/search"
+        method: POST
+        status_code: [200]
+        follow_redirects: none
+        headers:
+          Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
+        body_format: json
+        body:
+          q: "{{ meilisearch_verify_marker }}"
+      register: meilisearch_search
+
+    # The second document is expected not to match, so that a Meilisearch handing back
+    # everything it holds is told apart from one that actually searched.
+    - name: Assert Meilisearch finds the seeded document and only that one
+      ansible.builtin.assert:
+        that:
+          - meilisearch_search.json.hits | length == 1
+          - meilisearch_search.json.hits[0].id == 1
+          - meilisearch_verify_marker in meilisearch_search.json.hits[0].title
+        fail_msg: "Searching for '{{ meilisearch_verify_marker }}' returned {{ meilisearch_search.json.hits }}"
+        success_msg: "Meilisearch returns the seeded document when searched for '{{ meilisearch_verify_marker }}'"
+
+    # Everything so far went through the published port. This looks at the host side of
+    # the bind mount the systemd unit sets up: the file only lands here if the container
+    # was given `--mount src={{ meilisearch_verify_data_path }}`, and it is only owned by
+    # 1000:1000 if `--user` carried the uid and gid this scenario configured. Its
+    # contents are Meilisearch's own record of the database format it wrote.
+    - name: Read the database version Meilisearch wrote to the host data path
+      ansible.builtin.slurp:
+        src: "{{ meilisearch_verify_data_path }}/data.ms/VERSION"
+      register: meilisearch_database_version
+
+    - name: Stat the database version file Meilisearch wrote to the host data path
+      ansible.builtin.stat:
+        path: "{{ meilisearch_verify_data_path }}/data.ms/VERSION"
+      register: meilisearch_database_version_stat
+
+    - name: Assert Meilisearch persisted its database to the configured host path
+      ansible.builtin.assert:
+        that:
+          - (meilisearch_database_version.content | b64decode | trim) is match(meilisearch_defaults.meilisearch_version | regex_replace('^v', '') | regex_escape)
+          - meilisearch_database_version_stat.stat.uid == meilisearch_uid
+          - meilisearch_database_version_stat.stat.gid == meilisearch_gid
+        fail_msg: >-
+          The database at {{ meilisearch_verify_data_path }} reports version
+          {{ meilisearch_database_version.content | b64decode | trim }} and is owned by
+          {{ meilisearch_database_version_stat.stat.uid }}:{{ meilisearch_database_version_stat.stat.gid }}
+        success_msg: >-
+          Meilisearch persisted a {{ meilisearch_database_version.content | b64decode | trim }}
+          database to {{ meilisearch_verify_data_path }}, owned by
+          {{ meilisearch_uid }}:{{ meilisearch_gid }}
+
+    - name: Show Meilisearch verification summary
       ansible.builtin.debug:
         msg:
           - "Meilisearch systemd: {{ meilisearch_service.status.ActiveState }}"
-          - "Meilisearch HTTP: {{ meilisearch_endpoint.status }}"
+          - "Meilisearch version: {{ meilisearch_version_info.json.pkgVersion }}"
+          - "Unauthenticated request: {{ meilisearch_unauthenticated.status }}"
+          - "Unknown key: {{ meilisearch_wrong_key.status }}"
+          - "Metrics feature: {{ meilisearch_experimental_features.json.metrics }}"
+          - "Search hits for '{{ meilisearch_verify_marker }}': {{ meilisearch_search.json.hits | length }}"
+          - "Database on host: {{ meilisearch_database_version.content | b64decode | trim }}"

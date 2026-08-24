@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2018-2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2018-2026 Slavi Pantaleev
 SPDX-FileCopyrightText: 2019-2022 Aaron Raimist
 SPDX-FileCopyrightText: 2019-2023 MDAD project contributors
 SPDX-FileCopyrightText: 2023 QEDeD
@@ -47,7 +47,16 @@ Currently there is one testing scenario available.
 
 ### `default`
 
-Tests a standard Meilisearch installation.
+Tests a standard Meilisearch installation, published on a host port and guarded by a master key.
+
+The verification does not settle for the systemd unit reporting itself active — the unit restarts the container forever, so it reports active even while the container exits on startup. It asks Meilisearch itself:
+
+- an unauthenticated request to `/indexes` must be refused with a `401`. This is the negative control, and it is the first thing asked: an instance started without a master key answers that same request with a `200`, so the refusal is what proves the key the role rendered reached the process
+- a request carrying a key Meilisearch does not know must be refused with a `403`, telling "no credential" apart from "wrong credential"
+- `/version` must open with the configured key, and report the version `defaults/main.yml` pins
+- `/experimental-features` must report the metrics feature as enabled, which this scenario switches on through `meilisearch_environment_variables_additional_variables` — proving that config beyond the key reaches the process — and `/metrics` must then serve Prometheus output
+- an index round trip: create an index, add two documents, follow each `202 Accepted` to the task it enqueued until that task succeeds, then search for a marker word that only one of the documents carries and get back that one document
+- the database Meilisearch wrote must be on the host at the configured data path, owned by the configured uid and gid, recording the version that was installed
 
 ## Running
 

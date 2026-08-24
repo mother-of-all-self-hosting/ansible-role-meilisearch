@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 #
@@ -39,6 +40,17 @@ provisioner:
         meilisearch_container_labels_traefik_enabled: false
         meilisearch_container_http_host_bind_port: 7700
         meilisearch_environment_variables_master_key: random3d3a1e6e19ceea1faf207a923d50a1844adf235b3ed6833fd9579c13c7
+
+        # Meilisearch keeps its Prometheus endpoint behind an experimental feature flag
+        # which is off unless it is switched on, and reports the flag's state back over
+        # /experimental-features. That makes it the probe by which the verification
+        # can tell that this passthrough variable really reaches the process, rather
+        # than merely being written into a file next to it.
+        #
+        # A `$$` would be needed here for a literal dollar sign: molecule interpolates
+        # environment variables into this file before Ansible ever sees it.
+        meilisearch_environment_variables_additional_variables: |
+          MEILI_EXPERIMENTAL_ENABLE_METRICS=true
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
