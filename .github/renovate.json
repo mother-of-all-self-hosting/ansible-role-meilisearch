@@ -7,6 +7,6 @@
     "The Molecule run on the pull request is exactly the checkpoint that automerging would remove, and it earns its keep on this repository: it is what caught v1.51.0 renaming --experimental-dumpless-upgrade to --upgrade-db, a change that left the container exiting on startup while its systemd unit still reported itself active."
   ],
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.1.0"
   ]
 }
