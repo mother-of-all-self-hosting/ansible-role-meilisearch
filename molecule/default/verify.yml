@@ -331,13 +331,13 @@
           database to {{ meilisearch_verify_data_path }}, owned by
           {{ meilisearch_uid }}:{{ meilisearch_gid }}
 
-    - name: Show Meilisearch verification summary
+    - name: Show the Meilisearch verification summary
       ansible.builtin.debug:
         msg:
           - "Meilisearch systemd: {{ meilisearch_service.status.ActiveState }}"
           - "Meilisearch version: {{ meilisearch_version_info.json.pkgVersion }}"
-          - "Unauthenticated request: {{ meilisearch_unauthenticated.status }}"
-          - "Unknown key: {{ meilisearch_wrong_key.status }}"
-          - "Metrics feature: {{ meilisearch_experimental_features.json.metrics }}"
-          - "Search hits for '{{ meilisearch_verify_marker }}': {{ meilisearch_search.json.hits | length }}"
-          - "Database on host: {{ meilisearch_database_version.content | b64decode | trim }}"
+          - "Meilisearch unauthenticated request: {{ meilisearch_unauthenticated.status }}"
+          - "Meilisearch unknown key: {{ meilisearch_wrong_key.status }}"
+          - "Meilisearch metrics feature: {{ meilisearch_experimental_features.json.metrics }}"
+          - "Meilisearch search hits for '{{ meilisearch_verify_marker }}': {{ meilisearch_search.json.hits | length }}"
+          - "Meilisearch database on host: {{ meilisearch_database_version.content | b64decode | trim }}"
