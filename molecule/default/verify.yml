@@ -119,16 +119,16 @@
           Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
       register: meilisearch_version_info
 
-    # Meilisearch reports its version without the leading `v` that the tags and the role
-    # default carry, so that is stripped before comparing. Compared as a prefix, and
-    # escaped, so that a version reported with a build suffix keeps matching and the dots
-    # are not read as regex wildcards.
+    # `meilisearch_version` carries a leading `v` (`v3.14.0`) but the binary
+    # reports the bare version (`3.14.0`). The comparison is a prefix match, so
+    # that a build suffix appearing upstream does not fail the scenario.
     - name: Assert the running Meilisearch is the version this role installs
       ansible.builtin.assert:
-        that: meilisearch_version_info.json.pkgVersion is match(meilisearch_defaults.meilisearch_version | regex_replace('^v', '') | regex_escape)
-        fail_msg: >-
-          Meilisearch reports {{ meilisearch_version_info.json.pkgVersion }},
-          expected {{ meilisearch_defaults.meilisearch_version }}
+        that: >-
+          (meilisearch_version_info.json.pkgVersion | regex_replace('^v', '')).startswith(
+            meilisearch_defaults.meilisearch_version | regex_replace('^v', '')
+          )
+        fail_msg: "Meilisearch reports {{ meilisearch_version_info.json.pkgVersion | default('none') }}, expected {{ meilisearch_defaults.meilisearch_version }}"
         success_msg: "Meilisearch reports {{ meilisearch_version_info.json.pkgVersion }}"
 
     # Config reach beyond the master key. The role writes whatever
