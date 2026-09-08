@@ -123,7 +123,7 @@
         follow_redirects: none
         headers:
           Authorization: "Bearer {{ meilisearch_environment_variables_master_key }}"
-      register: meilisearch_version_info
+      register: meilisearch_version_reported
 
     # `meilisearch_version` carries a leading `v` (`v3.14.0`) but the binary
     # reports the bare version (`3.14.0`). The comparison is a prefix match, so
@@ -131,11 +131,11 @@
     - name: Assert the running Meilisearch is the version this role installs
       ansible.builtin.assert:
         that: >-
-          (meilisearch_version_info.json.pkgVersion | regex_replace('^v', '')).startswith(
+          (meilisearch_version_reported.json.pkgVersion | regex_replace('^v', '')).startswith(
             meilisearch_defaults.meilisearch_version | regex_replace('^v', '')
           )
-        fail_msg: "Meilisearch reports {{ meilisearch_version_info.json.pkgVersion | default('none') }}, expected {{ meilisearch_defaults.meilisearch_version }}"
-        success_msg: "Meilisearch reports {{ meilisearch_version_info.json.pkgVersion }}"
+        fail_msg: "Meilisearch reports {{ meilisearch_version_reported.json.pkgVersion | default('none') }}, expected {{ meilisearch_defaults.meilisearch_version }}"
+        success_msg: "Meilisearch reports {{ meilisearch_version_reported.json.pkgVersion }}"
 
     # Config reach beyond the master key. The role writes whatever
     # `meilisearch_environment_variables_additional_variables` holds into `env`, and this
@@ -341,7 +341,7 @@
       ansible.builtin.debug:
         msg:
           - "Meilisearch systemd: {{ meilisearch_service.status.ActiveState }}"
-          - "Meilisearch version: {{ meilisearch_version_info.json.pkgVersion }}"
+          - "Meilisearch version: {{ meilisearch_version_reported.json.pkgVersion }}"
           - "Meilisearch unauthenticated request: {{ meilisearch_unauthenticated.status }}"
           - "Meilisearch unknown key: {{ meilisearch_wrong_key.status }}"
           - "Meilisearch metrics feature: {{ meilisearch_experimental_features.json.metrics }}"
