@@ -24,6 +24,9 @@
     # document seeded below and not from anything the engine invented.
     meilisearch_verify_marker: gonzoborealis
 
+    meilisearch_verify_units:
+      - meilisearch.service
+
   tasks:
     - name: Verify that Meilisearch works
       block:
@@ -35,13 +38,14 @@
             file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
             name: meilisearch_defaults
 
-        - name: Wait for the Meilisearch systemd service to become active (up to 180s)
+        - name: Wait for the Meilisearch systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: meilisearch.service
-          register: meilisearch_service
-          until: meilisearch_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: meilisearch_services
+          until: meilisearch_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
+          loop: "{{ meilisearch_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -49,17 +53,20 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the Meilisearch systemd service is active
+        - name: Assert the Meilisearch systemd services are active
           ansible.builtin.assert:
-            that: meilisearch_service.status.ActiveState == 'active'
-            fail_msg: "meilisearch.service is not active ({{ meilisearch_service.status.ActiveState }})"
-            success_msg: "meilisearch.service is active"
+            that: meilisearch_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(meilisearch_verify_units | zip(meilisearch_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Every systemd service is active"
 
-        - name: Retrieve the Meilisearch systemd service log for debugging
+        - name: Retrieve the Meilisearch systemd services log for debugging
           when: meilisearch_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=meilisearch.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ meilisearch_verify_units }}"
 
         # The negative control, and deliberately the first thing asked of the HTTP surface.
         #
@@ -342,7 +349,7 @@
         - name: Show the Meilisearch verification summary
           ansible.builtin.debug:
             msg:
-              - "Meilisearch systemd: {{ meilisearch_service.status.ActiveState }}"
+              - "Meilisearch systemd: {% for unit, state in meilisearch_verify_units | zip(meilisearch_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Meilisearch version: {{ meilisearch_version_reported.json.pkgVersion }}"
               - "Meilisearch unauthenticated request: {{ meilisearch_unauthenticated.status }}"
               - "Meilisearch unknown key: {{ meilisearch_wrong_key.status }}"
