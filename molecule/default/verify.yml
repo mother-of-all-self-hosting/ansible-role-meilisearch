@@ -186,7 +186,7 @@
         - name: Assert Meilisearch serves Prometheus metrics
           ansible.builtin.assert:
             that: "'meilisearch_db_size_bytes' in meilisearch_metrics.content"
-            fail_msg: "Meilisearch served no recognizable metrics: {{ meilisearch_metrics.content[:200] | default('no content') }}"
+            fail_msg: "Meilisearch served no recognizable metrics: {{ meilisearch_metrics.content[:200] | default('no response') }}"
             success_msg: "Meilisearch serves Prometheus metrics"
 
         # Everything above could still be true of a Meilisearch that cannot actually index
