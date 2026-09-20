@@ -44,15 +44,13 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in meilisearch_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {#
-        `--upgrade-db` is what Meilisearch v1.51.0 renamed `--experimental-dumpless-upgrade` to.
-        Older images do not know it and exit with "unexpected argument" on startup.
-      #}
+      {{ meilisearch_container_image }} \
       {% if meilisearch_dumpless_upgrade_enabled %}
-      {{ meilisearch_container_image }} meilisearch --upgrade-db
-      {% else %}
-      {{ meilisearch_container_image }}
+      meilisearch --upgrade-db \
       {% endif %}
+      {% for arg in meilisearch_process_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
 
 {% for network in meilisearch_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ meilisearch_identifier }}
