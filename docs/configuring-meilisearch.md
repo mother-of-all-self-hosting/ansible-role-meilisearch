@@ -123,7 +123,7 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, Meilisearch becomes available internally to other services on the same network. If the service is exposed to the internet, it becomes available at the specified hostname like `https://example.com`.
 
-Refer to [this page](https://www.meilisearch.com/docs/getting_started/overview) on the documentation about its usage.
+Refer to [this page](https://www.meilisearch.com/docs/getting_started/overview) on the documentation about the usage.
 
 ### Obtaining API keys
 
