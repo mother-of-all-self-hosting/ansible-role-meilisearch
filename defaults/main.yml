@@ -247,6 +247,12 @@ meilisearch_environment_variables_env: production
 # Specify the instance’s master key generated with `pwgen -s 64 1` or in another way
 meilisearch_environment_variables_master_key: ""
 
+# Specify the instance's Default Admin API Key, which Meilisearch generates on its first start.
+# Obtain it with the `obtain-api-keys-meilisearch` tag once the instance is running.
+# The `backup-meilisearch` tag uses it unless an `api_key` is passed to it,
+# and services connecting to this instance can use it as their API key.
+meilisearch_default_admin_api_key: ""
+
 # Control if MEILI_NO_ANALYTICS is set
 meilisearch_environment_variables_no_analytics: true
 

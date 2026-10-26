@@ -133,15 +133,23 @@ You can run the playbook with the `obtain-api-keys-meilisearch` tag as below to 
 ansible-playbook -i inventory/hosts setup.yml --tags=obtain-api-keys-meilisearch
 ```
 
+Meilisearch generates these keys on its first start, so they cannot be known in advance. Add the Default Admin API Key to your `vars.yml` file:
+
+```yaml
+meilisearch_default_admin_api_key: YOUR_DEFAULT_ADMIN_API_KEY_HERE
+```
+
+The role uses it for [making database backups](#making-database-backups), and services connecting to this instance can use it as their API key.
+
 ### Making database backups
 
 To create a backup of the database, you can run the playbook with the `backup-meilisearch` tag as below:
 
 ```sh
-ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch -e api_key=YOUR_API_KEY_HERE
+ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch
 ```
 
-Make sure to replace `YOUR_API_KEY_HERE` with yours.
+This uses `meilisearch_default_admin_api_key` (see [Obtaining API keys](#obtaining-api-keys)). To use another API key, pass it with `-e api_key=YOUR_API_KEY_HERE`.
 
 ## Troubleshooting
 

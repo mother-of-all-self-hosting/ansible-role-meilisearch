@@ -4,12 +4,20 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# The command for obtaining API keys: `ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch -e api_key=YOUR_API_KEY_HERE`
+# The command for creating a snapshot: `ansible-playbook -i inventory/hosts setup.yml --tags=backup-meilisearch`
+# (with `-e api_key=YOUR_API_KEY_HERE`, unless `meilisearch_default_admin_api_key` is set)
 
-- name: Fail if playbook called incorrectly for Meilisearch
+- name: Determine the API key for creating a Meilisearch snapshot
+  ansible.builtin.set_fact:
+    meilisearch_snapshots_api_key: "{{ api_key | default(meilisearch_default_admin_api_key) }}"
+  no_log: true # hide the API key
+
+- name: Fail if no API key is available for creating a Meilisearch snapshot
   ansible.builtin.fail:
-    msg: "The `api_key` variable needs to be provided via --extra-vars"
-  when: "api_key is not defined or api_key == 'YOUR_API_KEY_HERE'"
+    msg: >-
+      An API key is needed for creating a snapshot.
+      Set `meilisearch_default_admin_api_key`, or pass a key via `--extra-vars`, as `api_key`.
+  when: "meilisearch_snapshots_api_key in ['', 'YOUR_API_KEY_HERE']"
 
 - name: Ensure Meilisearch service is started
   ansible.builtin.service:
@@ -28,7 +36,7 @@
     {{ devture_systemd_docker_base_host_command_docker }} exec
     --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
     {{ meilisearch_identifier }} curl -sSf -X POST
-    -H 'Authorization: Bearer {{ api_key }}'
+    -H 'Authorization: Bearer {{ meilisearch_snapshots_api_key }}'
     'http://localhost:{{ meilisearch_container_http_port }}/snapshots'
   register: meilisearch_snapshots_result
   no_log: true # hide the API key
@@ -41,7 +49,7 @@
     {{ devture_systemd_docker_base_host_command_docker }} exec
     --user={{ meilisearch_uid }}:{{ meilisearch_gid }}
     {{ meilisearch_identifier }} curl -sSf
-    -H 'Authorization: Bearer {{ api_key }}'
+    -H 'Authorization: Bearer {{ meilisearch_snapshots_api_key }}'
     'http://localhost:{{ meilisearch_container_http_port }}/tasks/{{ (meilisearch_snapshots_result.stdout | from_json).taskUid }}'
   register: meilisearch_snapshot_task_result
   until: "(meilisearch_snapshot_task_result.stdout | from_json).status in ['succeeded', 'failed', 'canceled']"
