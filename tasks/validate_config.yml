@@ -23,8 +23,6 @@
   with_items:
     - meilisearch_uid
     - meilisearch_gid
-    - meilisearch_path_prefix
-    - meilisearch_container_network
     - meilisearch_environment_variables_master_key
 
 # Meilisearch itself refuses to start in a production environment with a master key
